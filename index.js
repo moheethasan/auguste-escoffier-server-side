@@ -26,6 +26,7 @@ async function run() {
     await client.connect();
 
     const usersCollection = client.db("escoffierDb").collection("users");
+    const classesCollection = client.db("escoffierDb").collection("classes");
 
     // users related apis
     app.get("/users", async (req, res) => {
@@ -56,6 +57,13 @@ async function run() {
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // classes related api
+    app.post("/classes", async (req, res) => {
+      const addedClass = req.body;
+      const result = await classesCollection.insertOne(addedClass);
       res.send(result);
     });
 
