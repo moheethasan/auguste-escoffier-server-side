@@ -63,8 +63,18 @@ async function run() {
     // classes related api
     app.get("/classes", async (req, res) => {
       const instructorEmail = req.query.email;
-      const query = { instructor_email: instructorEmail };
+      let query = {};
+      if (instructorEmail) {
+        query = { instructor_email: instructorEmail };
+      }
       const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/classes/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await classesCollection.findOne(query);
       res.send(result);
     });
 
@@ -82,6 +92,27 @@ async function run() {
         $set: body,
       };
       const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.put("/classes/:id", async (req, res) => {
+      const id = req.params.id;
+      const body = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = {
+        upsert: true,
+      };
+      const updateDoc = {
+        $set: {
+          feedback: body.feedback,
+        },
+      };
+      console.log(updateDoc);
+      const result = await classesCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
 
