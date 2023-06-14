@@ -61,16 +61,27 @@ async function run() {
     });
 
     // classes related api
+    app.get("/classes", async (req, res) => {
+      const instructorEmail = req.query.email;
+      const query = { instructor_email: instructorEmail };
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.post("/classes", async (req, res) => {
       const addedClass = req.body;
       const result = await classesCollection.insertOne(addedClass);
       res.send(result);
     });
 
-    app.get("/classes", async (req, res) => {
-      const instructorEmail = req.query.email;
-      const query = { instructor_email: instructorEmail };
-      const result = await classesCollection.find(query).toArray();
+    app.patch("/classes/:id", async (req, res) => {
+      const id = req.params.id;
+      const body = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: body,
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
