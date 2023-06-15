@@ -140,6 +140,28 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/enrolls", async (req, res) => {
+      const body = req.body;
+      const query = {
+        student_email: body.student_email,
+        class_name: body.class_name,
+      };
+      const existingClass = await enrollsCollection.findOne(query);
+      console.log(existingClass);
+      if (existingClass) {
+        return res.status(400).send({ message: "Class already exists" });
+      }
+      const result = await enrollsCollection.insertOne(body);
+      res.send(result);
+    });
+
+    app.delete("/enrolls/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await enrollsCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
