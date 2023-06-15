@@ -27,6 +27,7 @@ async function run() {
 
     const usersCollection = client.db("escoffierDb").collection("users");
     const classesCollection = client.db("escoffierDb").collection("classes");
+    const enrollsCollection = client.db("escoffierDb").collection("enrolls");
 
     // users related apis
     app.get("/users", async (req, res) => {
@@ -73,7 +74,10 @@ async function run() {
       if (instructorEmail) {
         query = { instructor_email: instructorEmail };
       }
-      const result = await classesCollection.find(query).toArray();
+      const result = await classesCollection
+        .find(query)
+        .sort({ enrolled_student: -1 })
+        .toArray();
       res.send(result);
     });
 
@@ -125,6 +129,14 @@ async function run() {
         updateDoc,
         options
       );
+      res.send(result);
+    });
+
+    // enrolls related apis
+    app.get("/enrolls", async (req, res) => {
+      const email = req.query.email;
+      const query = { student_email: email };
+      const result = await enrollsCollection.find(query).toArray();
       res.send(result);
     });
 
