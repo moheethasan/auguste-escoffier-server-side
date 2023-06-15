@@ -61,8 +61,32 @@ async function run() {
       res.send({ token });
     });
 
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "admin") {
+        return res
+          .status(403)
+          .send({ error: true, message: "Forbidden Access" });
+      }
+      next();
+    };
+
+    const verifyInstructor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "instructor") {
+        return res
+          .status(403)
+          .send({ error: true, message: "Forbidden Access" });
+      }
+      next();
+    };
+
     // users related apis
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -112,7 +136,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/users/role/:id", async (req, res) => {
+    app.patch("/users/role/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const body = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -152,13 +176,13 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/classes", async (req, res) => {
+    app.post("/classes", verifyJWT, verifyInstructor, async (req, res) => {
       const addedClass = req.body;
       const result = await classesCollection.insertOne(addedClass);
       res.send(result);
     });
 
-    app.patch("/classes/:id", async (req, res) => {
+    app.patch("/classes/:id", verifyJWT, verifyInstructor, async (req, res) => {
       const id = req.params.id;
       const body = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -169,7 +193,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/classes/:id", async (req, res) => {
+    app.put("/classes/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const body = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -191,7 +215,7 @@ async function run() {
     });
 
     // enrolls related apis
-    app.get("/enrolls", async (req, res) => {
+    app.get("/enrolls", verifyJWT, async (req, res) => {
       const email = req.query.email;
       const query = { student_email: email };
       const result = await enrollsCollection.find(query).toArray();
@@ -213,7 +237,7 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/enrolls/:id", async (req, res) => {
+    app.delete("/enrolls/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await enrollsCollection.deleteOne(query);
