@@ -77,6 +77,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/approved", async (req, res) => {
+      const query = { status: "approve" };
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.get("/classes/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
