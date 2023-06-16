@@ -3,6 +3,7 @@ const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -50,6 +51,7 @@ async function run() {
     const usersCollection = client.db("escoffierDb").collection("users");
     const classesCollection = client.db("escoffierDb").collection("classes");
     const enrollsCollection = client.db("escoffierDb").collection("enrolls");
+    const paymentsCollection = client.db("escoffierDb").collection("payments");
 
     // generate jwt token
     app.post("/jwt", (req, res) => {
@@ -215,10 +217,19 @@ async function run() {
     });
 
     // enrolls related apis
-    app.get("/enrolls", verifyJWT, async (req, res) => {
+    // TODO: /enrolls/selected
+    app.get("/enrolls/selected", verifyJWT, async (req, res) => {
       const email = req.query.email;
-      const query = { student_email: email };
+      const query = { student_email: email, payment_status: "selected" };
       const result = await enrollsCollection.find(query).toArray();
+      res.send(result);
+    });
+    // TODO: /enrolls/enrolled
+
+    app.get("/enrolls/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await enrollsCollection.findOne(query);
       res.send(result);
     });
 
@@ -237,10 +248,43 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/enrolls/:id", async (req, res) => {
+      const id = req.params.id;
+      const body = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: body,
+      };
+      const result = await enrollsCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     app.delete("/enrolls/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await enrollsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // create payment intent
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = price * 100;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    // payment related api
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const result = await paymentsCollection.insertOne(payment);
       res.send(result);
     });
 
