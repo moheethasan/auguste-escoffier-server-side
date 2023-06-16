@@ -207,7 +207,6 @@ async function run() {
           feedback: body.feedback,
         },
       };
-      console.log(updateDoc);
       const result = await classesCollection.updateOne(
         filter,
         updateDoc,
@@ -217,14 +216,19 @@ async function run() {
     });
 
     // enrolls related apis
-    // TODO: /enrolls/selected
     app.get("/enrolls/selected", verifyJWT, async (req, res) => {
       const email = req.query.email;
       const query = { student_email: email, payment_status: "selected" };
       const result = await enrollsCollection.find(query).toArray();
       res.send(result);
     });
-    // TODO: /enrolls/enrolled
+
+    app.get("/enrolls/enrolled", verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      const query = { student_email: email, payment_status: "enrolled" };
+      const result = await enrollsCollection.find(query).toArray();
+      res.send(result);
+    });
 
     app.get("/enrolls/:id", async (req, res) => {
       const id = req.params.id;
@@ -240,7 +244,6 @@ async function run() {
         class_name: body.class_name,
       };
       const existingClass = await enrollsCollection.findOne(query);
-      console.log(existingClass);
       if (existingClass) {
         return res.status(400).send({ message: "Class already exists" });
       }
@@ -282,6 +285,16 @@ async function run() {
     });
 
     // payment related api
+    app.get("/payments", verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await paymentsCollection
+        .find(query)
+        .sort({ _id: -1 })
+        .toArray();
+      res.send(result);
+    });
+
     app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
       const result = await paymentsCollection.insertOne(payment);
