@@ -46,7 +46,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    client.connect();
 
     const usersCollection = client.db("escoffierDb").collection("users");
     const classesCollection = client.db("escoffierDb").collection("classes");
@@ -184,7 +184,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/classes/:id", verifyJWT, verifyInstructor, async (req, res) => {
+    app.patch("/classes/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const body = req.body;
       const filter = { _id: new ObjectId(id) };
