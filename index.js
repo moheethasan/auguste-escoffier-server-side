@@ -284,7 +284,7 @@ async function run() {
       });
     });
 
-    // payment related api
+    // payments related api
     app.get("/payments", verifyJWT, async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
